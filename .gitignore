@@ -18,3 +18,4 @@ ENV/
 # System files
 .DS_Store
 /data/
+/dataset/
