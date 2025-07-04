@@ -1,6 +1,6 @@
 import os
 
-from PIL.Image import Image
+from PIL import Image
 from matplotlib import pyplot as plt
 from datasets import load_dataset
 
@@ -57,6 +57,28 @@ for i, filename in enumerate(sorted(os.listdir(dataset_folder))):
         ids.append(str(i))
         uris.append(file_path)
 
-flower_collection.add(ids=ids, uris=uris)
-print("Images added to the database.")
-print(flower_collection.count())
+# flower_collection.add(ids=ids, uris=uris)
+# print("Images added to the database.")
+# print(flower_collection.count())
+
+
+def query_db(query, results=5):
+    print(f"Querying the database for: {query}")
+    results = flower_collection.query(
+        query_texts=[query], n_results=results, include=["uris", "distances"]
+    )
+    return results
+
+
+def print_results(results):
+    for idx, uri in enumerate(results["uris"][0]):
+        print(f"ID: {results['ids'][0][idx]}")
+        print(f"Distance: {results['distances'][0][idx]}")
+        print(f"Path: {uri}")
+        show_image_from_uri(uri)
+        print("\n")
+
+
+query = "pink flower with yellow center"
+results = query_db(query)
+print_results(results)
