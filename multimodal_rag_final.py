@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from PIL import Image
 from matplotlib import pyplot as plt
@@ -90,7 +93,6 @@ import base64
 vision_model = ChatOpenAI(
     model="gpt-4o-mini",
     temperature=0.0,
-    openai_api_key="",
 )
 
 parser = StrOutputParser()
