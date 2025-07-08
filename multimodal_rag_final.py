@@ -79,6 +79,91 @@ def print_results(results):
         print("\n")
 
 
-query = "pink flower with yellow center"
-results = query_db(query)
-print_results(results)
+# query = "pink flower with yellow center"
+# results = query_db(query)
+# print_results(results)
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+import base64
+
+vision_model = ChatOpenAI(
+    model="gpt-4o-mini",
+    temperature=0.0,
+    openai_api_key="",
+)
+
+parser = StrOutputParser()
+
+image_prompt = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a talented florist and you have been asked to create a bouquet of flowers for a special event. Answer the user's question  using the given image context with direct references to parts of the images provided."
+            " Maintain a more conversational tone, don't make too many lists. Use markdown formatting for highlights, emphasis, and structure.",
+        ),
+        (
+            "user",
+            [
+                {
+                    "type": "text",
+                    "text": "what are some good ideas for a bouquet arrangement {user_query}",
+                },
+                {
+                    "type": "image_url",
+                    "image_url": "data:image/jpeg;base64,{image_data_1}",
+                },
+                {
+                    "type": "image_url",
+                    "image_url": "data:image/jpeg;base64,{image_data_2}",
+                },
+            ],
+        ),
+    ]
+)
+
+vision_chain = image_prompt | vision_model | parser
+
+
+def format_prompt_inputs(data, user_query):
+    print("Formatting prompt inputs...")
+    inputs = {}
+
+    inputs["user_query"] = user_query
+
+    image_path_1 = data["uris"][0][0]
+    image_path_2 = data["uris"][0][1]
+
+    with open(image_path_1, "rb") as image_file:
+        image_data_1 = image_file.read()
+    inputs["image_data_1"] = base64.b64encode(image_data_1).decode("utf-8")
+
+    with open(image_path_2, "rb") as image_file:
+        image_data_2 = image_file.read()
+    inputs["image_data_2"] = base64.b64encode(image_data_2).decode("utf-8")
+
+    print("Prompt inputs formatted....")
+    return inputs
+
+
+print("Welcome to the flower arrangement service!")
+print("Please enter your query to get some ideas for a bouquet arrangement.")
+
+query = input("Enter your query: \n")
+
+results = query_db(query, results=2)
+prompt_input = format_prompt_inputs(results, query)
+response = vision_chain.invoke(prompt_input)
+
+print("\n ------- \n")
+
+print("\n ---Response---- \n")
+print(response)
+
+print("\n Here are some ideas for a bouquet arrangement based on your query: \n")
+show_image_from_uri(results["uris"][0][0])
+show_image_from_uri(results["uris"][0][1])
+
+print("\n Images URI: \n")
+print(f"Image 1: {results["uris"][0][0]}")
+print(f"Image 2: {results["uris"][0][1]}")
